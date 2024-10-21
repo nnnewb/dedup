@@ -14,69 +14,65 @@
  * with this program; if not, visit the http://fsf.org website.
  */
 
+#include "bloom.h"
 #include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include "bloom.h"
 
-#define SETBIT(a, n) (a[n/CHAR_BIT] |= (1<<(n%CHAR_BIT)))
-#define GETBIT(a, n) (a[n/CHAR_BIT] & (1<<(n%CHAR_BIT)))
+#define SETBIT(a, n) (a[n / CHAR_BIT] |= (1 << (n % CHAR_BIT)))
+#define GETBIT(a, n) (a[n / CHAR_BIT] & (1 << (n % CHAR_BIT)))
 
-BLOOM *bloom_create(size_t size)
-{
-	BLOOM *bloom;
-	
-	if(!(bloom = malloc(sizeof(BLOOM)))) {
-		return NULL;
-	}
+BLOOM *bloom_create(size_t size) {
+    BLOOM *bloom;
 
-	if(!(bloom->a = calloc((size + CHAR_BIT-1)/CHAR_BIT, sizeof(char)))) {
-		free(bloom);
-		return NULL;
-	}
-	bloom->asize = size;
+    if (!(bloom = malloc(sizeof(BLOOM)))) {
+        return NULL;
+    }
 
-	return bloom;
+    if (!(bloom->a = calloc((size + CHAR_BIT - 1) / CHAR_BIT, sizeof(char)))) {
+        free(bloom);
+        return NULL;
+    }
+    bloom->asize = size;
+
+    return bloom;
 }
 
-int bloom_destroy(BLOOM *bloom)
-{
-	free(bloom->a);
-	free(bloom);
+int bloom_destroy(BLOOM *bloom) {
+    free(bloom->a);
+    free(bloom);
 
-	return 0;
+    return 0;
 }
 
-int bloom_setbit(BLOOM *bloom, int n, ...)
-{
-	va_list l;
-	uint32_t pos;
-	int i;
+int bloom_setbit(BLOOM *bloom, int n, ...) {
+    va_list l;
+    uint32_t pos;
+    int i;
 
-	va_start(l, n);
-	for (i = 0; i < n; i++) {
-		pos = va_arg(l, uint32_t);
-		SETBIT(bloom->a, pos % bloom->asize);
-	}
-	va_end(l);
+    va_start(l, n);
+    for (i = 0; i < n; i++) {
+        pos = va_arg(l, uint32_t);
+        SETBIT(bloom->a, pos % bloom->asize);
+    }
+    va_end(l);
 
-	return 0;
+    return 0;
 }
 
-int bloom_check(BLOOM *bloom, int n, ...)
-{
-	va_list l;
-	uint32_t pos;
-	int i;
+int bloom_check(BLOOM *bloom, int n, ...) {
+    va_list l;
+    uint32_t pos;
+    int i;
 
-	va_start(l, n);
-	for (i = 0; i < n; i++) {
-		pos = va_arg(l, uint32_t);
-		if(!(GETBIT(bloom->a, pos % bloom->asize))) {
-			return 0;
-		}
-	}
-	va_end(l);
+    va_start(l, n);
+    for (i = 0; i < n; i++) {
+        pos = va_arg(l, uint32_t);
+        if (!(GETBIT(bloom->a, pos % bloom->asize))) {
+            return 0;
+        }
+    }
+    va_end(l);
 
-	return 1;
+    return 1;
 }

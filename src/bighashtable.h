@@ -28,4 +28,3 @@ void hash_insert(void *key, void *data, int datasz, hashtable *tab);
 void *hash_value(void *key, hashtable *tab);
 
 #endif
-

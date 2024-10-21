@@ -12,17 +12,17 @@
                      Avoid some compiler warnings for input and output buffers
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 #include <zlib.h>
 
 #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)
-#  include <fcntl.h>
-#  include <io.h>
-#  define SET_BINARY_MODE(file) setmode(fileno(file), O_BINARY)
+#include <fcntl.h>
+#include <io.h>
+#define SET_BINARY_MODE(file) setmode(fileno(file), O_BINARY)
 #else
-#  define SET_BINARY_MODE(file)
+#define SET_BINARY_MODE(file)
 #endif
 
 #define CHUNK 16384
@@ -33,8 +33,7 @@
    level is supplied, Z_VERSION_ERROR if the version of zlib.h and the
    version of the library linked do not match, or Z_ERRNO if there is
    an error reading or writing the files. */
-int def(FILE *source, FILE *dest, int level)
-{
+int def(FILE *source, FILE *dest, int level) {
     int ret, flush;
     unsigned have;
     z_stream strm;
@@ -64,27 +63,26 @@ int def(FILE *source, FILE *dest, int level)
         do {
             strm.avail_out = CHUNK;
             strm.next_out = out;
-            ret = deflate(&strm, flush);    /* no bad return value */
-            assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+            ret = deflate(&strm, flush);   /* no bad return value */
+            assert(ret != Z_STREAM_ERROR); /* state not clobbered */
             have = CHUNK - strm.avail_out;
             if (fwrite(out, 1, have, dest) != have || ferror(dest)) {
                 (void)deflateEnd(&strm);
                 return Z_ERRNO;
             }
         } while (strm.avail_out == 0);
-        assert(strm.avail_in == 0);     /* all input will be used */
+        assert(strm.avail_in == 0); /* all input will be used */
 
         /* done when last data in file processed */
     } while (flush != Z_FINISH);
-    assert(ret == Z_STREAM_END);        /* stream will be complete */
+    assert(ret == Z_STREAM_END); /* stream will be complete */
 
     /* clean up and return */
     (void)deflateEnd(&strm);
     return Z_OK;
 }
 
-int def_block(unsigned char *buf_in, int len_in, unsigned char *buf_out, int *len_out, int level)
-{
+int def_block(unsigned char *buf_in, int len_in, unsigned char *buf_out, int *len_out, int level) {
     int ret, flush;
     unsigned have = 0;
     z_stream strm;
@@ -102,15 +100,15 @@ int def_block(unsigned char *buf_in, int len_in, unsigned char *buf_out, int *le
     strm.next_in = buf_in;
     flush = Z_FINISH;
     do {
-       strm.avail_out = *len_out;
-       strm.next_out = buf_out;
-       ret = deflate(&strm, flush);    /* no bad return value */
-       assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
-       have += (*len_out - strm.avail_out);
+        strm.avail_out = *len_out;
+        strm.next_out = buf_out;
+        ret = deflate(&strm, flush);   /* no bad return value */
+        assert(ret != Z_STREAM_ERROR); /* state not clobbered */
+        have += (*len_out - strm.avail_out);
     } while (strm.avail_out == 0);
     *len_out = have;
-    assert(strm.avail_in == 0);     /* all input will be used */
-    assert(ret == Z_STREAM_END);        /* stream will be complete */
+    assert(strm.avail_in == 0);  /* all input will be used */
+    assert(ret == Z_STREAM_END); /* stream will be complete */
 
     /* clean up and return */
     (void)deflateEnd(&strm);
@@ -123,8 +121,7 @@ int def_block(unsigned char *buf_in, int len_in, unsigned char *buf_out, int *le
    invalid or incomplete, Z_VERSION_ERROR if the version of zlib.h and
    the version of the library linked do not match, or Z_ERRNO if there
    is an error reading or writing the files. */
-int inf(FILE *source, FILE *dest)
-{
+int inf(FILE *source, FILE *dest) {
     int ret;
     unsigned have;
     z_stream strm;
@@ -157,10 +154,10 @@ int inf(FILE *source, FILE *dest)
             strm.avail_out = CHUNK;
             strm.next_out = out;
             ret = inflate(&strm, Z_NO_FLUSH);
-            assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+            assert(ret != Z_STREAM_ERROR); /* state not clobbered */
             switch (ret) {
             case Z_NEED_DICT:
-                ret = Z_DATA_ERROR;     /* and fall through */
+                ret = Z_DATA_ERROR; /* and fall through */
             case Z_DATA_ERROR:
             case Z_MEM_ERROR:
                 (void)inflateEnd(&strm);
@@ -181,8 +178,7 @@ int inf(FILE *source, FILE *dest)
     return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
 }
 
-int inf_block(unsigned char *buf_in, int len_in, unsigned char *buf_out, int *len_out)
-{
+int inf_block(unsigned char *buf_in, int len_in, unsigned char *buf_out, int *len_out) {
     int ret;
     unsigned have = 0;
     z_stream strm;
@@ -205,10 +201,10 @@ int inf_block(unsigned char *buf_in, int len_in, unsigned char *buf_out, int *le
             strm.avail_out = *len_out;
             strm.next_out = buf_out;
             ret = inflate(&strm, Z_NO_FLUSH);
-            assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+            assert(ret != Z_STREAM_ERROR); /* state not clobbered */
             switch (ret) {
             case Z_NEED_DICT:
-               ret = Z_DATA_ERROR;     /* and fall through */
+                ret = Z_DATA_ERROR; /* and fall through */
             case Z_DATA_ERROR:
             case Z_MEM_ERROR:
                 (void)inflateEnd(&strm);
@@ -225,8 +221,7 @@ int inf_block(unsigned char *buf_in, int len_in, unsigned char *buf_out, int *le
 }
 
 /* report a zlib or i/o error */
-void zerr(int ret)
-{
+void zerr(int ret) {
     fputs("zpipe: ", stderr);
     switch (ret) {
     case Z_ERRNO:
@@ -250,67 +245,62 @@ void zerr(int ret)
 }
 
 /* compress from source file to dest file*/
-int zlib_compress_file(char *src_file, char *dest_file)
-{
-	int ret;
-	FILE *src = NULL, *dest = NULL;
+int zlib_compress_file(char *src_file, char *dest_file) {
+    int ret;
+    FILE *src = NULL, *dest = NULL;
 
-	src = fopen(src_file, "r");
-	dest = fopen(dest_file, "w");
-	ret = def(src, dest, Z_DEFAULT_COMPRESSION);
-	if (ret != Z_OK)
-		zerr(ret);
-	fclose(src);
-	fclose(dest);
+    src = fopen(src_file, "r");
+    dest = fopen(dest_file, "w");
+    ret = def(src, dest, Z_DEFAULT_COMPRESSION);
+    if (ret != Z_OK)
+        zerr(ret);
+    fclose(src);
+    fclose(dest);
 
-	return ret;
+    return ret;
 }
 
 /* compress from source buf to dest buf */
-int zlib_compress_block(unsigned char *buf_in, int len_in, unsigned char *buf_out, int *len_out)
-{
-	int ret;
+int zlib_compress_block(unsigned char *buf_in, int len_in, unsigned char *buf_out, int *len_out) {
+    int ret;
 
-	ret = def_block(buf_in, len_in, buf_out, len_out, Z_DEFAULT_COMPRESSION);
-	if (ret != Z_OK)
-		zerr(ret);
+    ret = def_block(buf_in, len_in, buf_out, len_out, Z_DEFAULT_COMPRESSION);
+    if (ret != Z_OK)
+        zerr(ret);
 
-	return ret;
+    return ret;
 }
 
 /* decompress from source file to dest file */
-int zlib_decompress_file(char *src_file, char *dest_file)
-{
-	int ret;
-	FILE *src = NULL, *dest = NULL;
+int zlib_decompress_file(char *src_file, char *dest_file) {
+    int ret;
+    FILE *src = NULL, *dest = NULL;
 
-	src = fopen(src_file, "r");
-	dest = fopen(dest_file, "w");
-	ret = inf(src, dest);
-	if (ret != Z_OK)
-		zerr(ret);
-	fclose(src);
-	fclose(dest);
+    src = fopen(src_file, "r");
+    dest = fopen(dest_file, "w");
+    ret = inf(src, dest);
+    if (ret != Z_OK)
+        zerr(ret);
+    fclose(src);
+    fclose(dest);
 
-	return ret;
+    return ret;
 }
 
 /* decompress from source buf to dest buf */
-int zlib_decompress_block(unsigned char *buf_in, int len_in, unsigned char *buf_out, int *len_out)
-{
-	int ret;
+int zlib_decompress_block(unsigned char *buf_in, int len_in, unsigned char *buf_out, int *len_out) {
+    int ret;
 
-	ret = inf_block(buf_in, len_in, buf_out, len_out);
-	if (ret != Z_OK)
-		zerr(ret);
+    ret = inf_block(buf_in, len_in, buf_out, len_out);
+    if (ret != Z_OK)
+        zerr(ret);
 
-	return ret;
+    return ret;
 }
 
 #if TESTZLIB
 /* compress or decompress from stdin to stdout */
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     int ret;
     FILE *src = NULL, *dest = NULL;
 
@@ -336,26 +326,26 @@ int main(int argc, char **argv)
 
     /* do compression from source file to dest file*/
     else if (argc == 3) {
-    	src = fopen(argv[1], "r");
-	dest = fopen(argv[2], "w");
-	ret = def(src, dest, Z_DEFAULT_COMPRESSION);
-	if (ret != Z_OK)
-		zerr(ret);
-	fclose(src);
-	fclose(dest);
-	return ret;
+        src = fopen(argv[1], "r");
+        dest = fopen(argv[2], "w");
+        ret = def(src, dest, Z_DEFAULT_COMPRESSION);
+        if (ret != Z_OK)
+            zerr(ret);
+        fclose(src);
+        fclose(dest);
+        return ret;
     }
 
     /* do decompression from source to dest if -d specified */
     else if (argc == 4 && strcmp(argv[1], "-d") == 0) {
-    	src = fopen(argv[2], "r");
-	dest = fopen(argv[3], "w");
-	ret = inf(src, dest);
-	if (ret != Z_OK)
-		zerr(ret);
-	fclose(src);
-	fclose(dest);
-	return ret;
+        src = fopen(argv[2], "r");
+        dest = fopen(argv[3], "w");
+        ret = inf(src, dest);
+        if (ret != Z_OK)
+            zerr(ret);
+        fclose(src);
+        fclose(dest);
+        return ret;
     }
 
     /* otherwise, report usage */

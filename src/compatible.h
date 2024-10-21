@@ -13,10 +13,9 @@
 #endif
 
 // https://www.man7.org/linux/man-pages/man2/lstat.2.html
-#if /* Since glibc 2.20 */ _DEFAULT_SOURCE || _XOPEN_SOURCE >= 500 || \
-    /* Since glibc 2.10: */ _POSIX_C_SOURCE >= 200112L || \
-    /* glibc 2.19 and earlier */ _BSD_SOURCE
+#if /* Since glibc 2.20 */ _DEFAULT_SOURCE || _XOPEN_SOURCE >= 500 ||                                                  \
+        /* Since glibc 2.10: */ _POSIX_C_SOURCE >= 200112L || /* glibc 2.19 and earlier */ _BSD_SOURCE
 #define HAVE_LSTAT
 #endif
 
-#endif //COMPATIBLE_H
+#endif // COMPATIBLE_H

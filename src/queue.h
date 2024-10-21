@@ -6,17 +6,17 @@ extern "C" {
 #endif
 
 struct qnode {
-        void *data;
-        struct qnode *next;
+    void *data;
+    struct qnode *next;
 };
-#define QNODE_SIZE	(sizeof(struct qnode))
+#define QNODE_SIZE (sizeof(struct qnode))
 
-typedef struct linkqueue{
-        struct qnode *front;
-        struct qnode *rear;
-	int (*compare)(void *e1, void *e2);
+typedef struct linkqueue {
+    struct qnode *front;
+    struct qnode *rear;
+    int (*compare)(void *e1, void *e2);
 } link_queue;
-#define LINKQUEUE_SIZE	(sizeof(struct linkqueue))
+#define LINKQUEUE_SIZE (sizeof(struct linkqueue))
 
 struct linkqueue *queue_creat();
 int queue_destroy(struct linkqueue *q);
